@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+# copy somewhere to your path
+# usage: git bzr-rev-map <remote name> <remote branch name>
+
+import os
+import sys
+import json
+import commands
+
+import bzrlib
+if hasattr(bzrlib, "initialize"):
+    bzrlib.initialize()
+import bzrlib.branch
+
+# chdir to top of repo so relative opens work
+os.chdir(commands.getoutput("git rev-parse --show-toplevel"))
+
+def get_mark_to_git(remote):
+    marks_git = open(".git/bzr/%s/marks-git" % remote)
+
+    mark_to_git = {}
+    for line in marks_git.readlines():
+        mark, hash = line.split()
+        mark = mark.lstrip(":")
+        mark_to_git[int(mark)] = hash
+
+    return mark_to_git
+
+def get_dotted_revs(remote, branch):
+    branch = bzrlib.branch.Branch.open(".git/bzr/%s/clone/%s" % (remote, branch))
+
+    marks_int = json.load(open(".git/bzr/%s/marks-int" % remote))
+    marks = marks_int['marks'].items()
+    marks.sort(key=lambda x: x[0].rsplit("-", 2)[1])
+
+    for rev, mark in marks:
+        try:
+            yield (rev, mark, branch.revision_id_to_dotted_revno(rev))
+        except bzrlib.errors.NoSuchRevision:
+            continue
+
+def main():
+    remote = sys.argv[1]
+    branch = sys.argv[2]
+
+    mark_to_git = get_mark_to_git(remote)
+
+    for rev, mark, revno in get_dotted_revs(remote, branch):
+        revno_dotted = '.'.join([str(x) for x in revno])
+        email, date, _ = rev.rsplit("-", 2)
+        email_censored = email.replace("@", "-")
+
+        print "\t".join([date, mark_to_git[mark], revno_dotted, email_censored])
+
+
+if __name__ == "__main__":
+    main()
