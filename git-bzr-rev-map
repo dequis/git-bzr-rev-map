@@ -26,18 +26,23 @@ def get_mark_to_git(remote):
 
     return mark_to_git
 
-def get_dotted_revs(remote, branch):
+def get_rev_id_map(remote, branch):
     branch = bzrlib.branch.Branch.open(".git/bzr/%s/clone/%s" % (remote, branch))
+    return branch.get_revision_id_to_revno_map()
+
+def get_dotted_revs(remote, branch):
 
     marks_int = json.load(open(".git/bzr/%s/marks-int" % remote))
     marks = marks_int['marks'].items()
     marks.sort(key=lambda x: x[0].rsplit("-", 2)[1])
 
+    rev_id_map = get_rev_id_map(remote, branch)
+
     for rev, mark in marks:
         try:
-            yield (rev, mark, branch.revision_id_to_dotted_revno(rev))
-        except bzrlib.errors.NoSuchRevision:
-            continue
+            yield (rev, mark, rev_id_map[rev])
+        except KeyError:
+            pass
 
 def main():
     remote = sys.argv[1]
