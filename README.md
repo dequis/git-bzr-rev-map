@@ -1,7 +1,7 @@
 git-bzr-rev-map
 ===============
 
-Generates a mapping of git revisions to bzr revisions, for use with git-remote-bzr
+Generates a mapping of git revisions to bzr revisions, for use with [git-remote-bzr][]
 
 ## Why
 
@@ -35,3 +35,5 @@ Then run:
 ## Demo
 
 [raw](http://bzr.dequis.org/revmap/raw.txt), [fancy](http://bzr.dequis.org/revmap/fancy.html)
+
+[git-remote-bzr]: https://github.com/felipec/git-remote-bzr
